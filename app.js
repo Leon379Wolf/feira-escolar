@@ -1,3 +1,19 @@
+// Configuração do Firebase (modo compatível)
+const firebaseConfig = {
+  apiKey: "AIzaSyCvAQtMC6oRYHLhOsNeWx05KppQmziSpiA",
+  authDomain: "feira-escolar-2025.firebaseapp.com",
+  projectId: "feira-escolar-2025",
+  storageBucket: "feira-escolar-2025.firebasestorage.app",
+  messagingSenderId: "686535065959",
+  appId: "1:686535065959:web:da71f4d3ff02bb4ba4efc2",
+  measurementId: "G-9Q4Z7ZW0JK"
+};
+
+firebase.initializeApp(firebaseConfig);
+firebase.analytics();
+const db = firebase.firestore();
+window.db = db;
+
 function carregarProdutos() {
   const container = document.getElementById('produtos');
   if (!container) return;
@@ -31,4 +47,12 @@ function carregarProdutos() {
         container.appendChild(div);
       });
     });
+}
+
+window.simularCompra = function() {
+  alert('🎉 Compra simulada com sucesso!\n\nNenhum pagamento real foi feito.\nObrigado por participar da feira!');
+};
+
+if (document.getElementById('produtos')) {
+  carregarProdutos();
 }
