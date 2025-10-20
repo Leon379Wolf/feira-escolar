@@ -23,6 +23,9 @@
       <label>Preço (R$):</label>
       <input type="number" id="preco" step="0.01" min="0.01" required>
 
+      <label>URL da imagem (opcional):</label>
+      <input type="url" id="imagem" placeholder="https://exemplo.com/imagem.jpg">
+
       <label>Descrição (opcional):</label>
       <textarea id="descricao" rows="3"></textarea>
 
@@ -39,12 +42,13 @@
     document.getElementById('form-produto')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const produto = {
-  nome: document.getElementById('nome').value,
-  vendedor: document.getElementById('vendedor').value,
-  preco: parseFloat(document.getElementById('preco').value),
-  descricao: document.getElementById('descricao').value || '',
-  data: new Date()  // ← Adicione "data:" antes de new Date()
-};
+        nome: document.getElementById('nome').value,
+        vendedor: document.getElementById('vendedor').value,
+        preco: parseFloat(document.getElementById('preco').value),
+        descricao: document.getElementById('descricao').value || '',
+        imagem: document.getElementById('imagem').value || '', // URL da imagem
+         new Date()
+      };
 
       try {
         await db.collection('produtos').add(produto);
