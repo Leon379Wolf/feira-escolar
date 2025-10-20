@@ -34,11 +34,11 @@
   </main>
 
   <!-- Firebase SDK (modo compatível + Storage) -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script>
-  <script src="app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script>
+<script src="app.js"></script>
 
   <script>
     // Inicializa Firebase (modo compatível)
@@ -74,8 +74,7 @@
         try {
           await fileRef.put(file);
           imagemUrl = await fileRef.getDownloadURL();
-        } catch (err) {
-          alert('❌ Erro ao enviar imagem: ' + err.message);
+        } catch (err) {alert('❌ Erro ao enviar imagem: ' + err.message);
           return;
         }
       }
@@ -93,8 +92,7 @@
         await db.collection('produtos').add(produto);
         alert('✅ Produto publicado com sucesso!');
         document.getElementById('form-produto').reset();
-      } catch (err) {
-        alert('❌ Erro ao publicar: ' + err.message);
+      } catch (err) {alert('❌ Erro ao publicar: ' + err.message);
       }
     });
   </script>
