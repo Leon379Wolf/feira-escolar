@@ -24,7 +24,7 @@
       <input type="number" id="preco" step="0.01" min="0.01" required>
 
       <label>URL da imagem (opcional):</label>
-      <input type="url" id="imagem" placeholder="https://exemplo.com/imagem.jpg">
+      <input type="url" id="imagem" placeholder="https://exemplo.com/imagem.webp">
 
       <label>Descrição (opcional):</label>
       <textarea id="descricao" rows="3"></textarea>
@@ -38,16 +38,25 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script>
   <script src="app.js"></script>
+
   <script>
     document.getElementById('form-produto')?.addEventListener('submit', async (e) => {
       e.preventDefault();
+
+      const urlImagem = document.getElementById('imagem').value.trim();
+      // Validação opcional: aceita apenas URLs que terminam com extensões de imagem válidas
+      if (urlImagem && !/\.(jpg|jpeg|png|gif|webp)$/i.test(urlImagem)) {
+        alert('⚠️ A URL da imagem deve terminar com .jpg, .jpeg, .png, .gif ou .webp');
+        return;
+      }
+
       const produto = {
         nome: document.getElementById('nome').value,
         vendedor: document.getElementById('vendedor').value,
         preco: parseFloat(document.getElementById('preco').value),
         descricao: document.getElementById('descricao').value || '',
-        imagem: document.getElementById('imagem').value || '', // URL da imagem
-         new Date()
+        imagem: urlImagem,
+         new Date() // ✅ Correto: propriedade "data" definida
       };
 
       try {
