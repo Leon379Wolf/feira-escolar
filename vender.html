@@ -33,15 +33,14 @@
     </form>
   </main>
 
-  <!-- Firebase SDK (modo compatível + Storage) -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script>
-<script src="app.js"></script>
+  <!-- Firebase SDK (modo compatível - SEM espaços nos src!) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script>
 
   <script>
-    // Inicializa Firebase (modo compatível)
+    // Configuração do Firebase (modo compatível)
     const firebaseConfig = {
       apiKey: "AIzaSyCvAQtMC6oRYHLhOsNeWx05KppQmziSpiA",
       authDomain: "feira-escolar-2025.firebaseapp.com",
@@ -52,47 +51,53 @@
       measurementId: "G-9Q4Z7ZW0JK"
     };
 
+    // Inicializa Firebase
     firebase.initializeApp(firebaseConfig);
     firebase.analytics();
 
+    // Referências
     const storage = firebase.storage();
     const db = firebase.firestore();
 
+    // Evento de envio do formulário
     document.getElementById('form-produto')?.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const fileInput = document.getElementById('imagem-arquivo');
       let imagemUrl = '';
 
+      // Upload de imagem, se houver
       if (fileInput.files && fileInput.files[0]) {
         const file = fileInput.files[0];
-        // Nome único para evitar conflitos
-        const fileName = `produtos/${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
-        const storageRef = storage.ref();
-        const fileRef = storageRef.child(fileName);
+        const safeFileName = file.name.replace(/\s+/g, '_');
+        const fileName = `produtos/${Date.now()}_${safeFileName}`;
+        const fileRef = storage.ref().child(fileName);
 
         try {
           await fileRef.put(file);
           imagemUrl = await fileRef.getDownloadURL();
-        } catch (err) {alert('❌ Erro ao enviar imagem: ' + err.message);
+        } catch (err) {
+          alert('❌ Erro ao enviar imagem: ' + err.message);
           return;
         }
       }
 
+      // Objeto do produto — CORRETO, com "data:"
       const produto = {
         nome: document.getElementById('nome').value,
         vendedor: document.getElementById('vendedor').value,
         preco: parseFloat(document.getElementById('preco').value),
         descricao: document.getElementById('descricao').value || '',
         imagem: imagemUrl,
-        data: new Date()
+        data: new Date() // ✅ Sintaxe correta
       };
 
       try {
         await db.collection('produtos').add(produto);
         alert('✅ Produto publicado com sucesso!');
         document.getElementById('form-produto').reset();
-      } catch (err) {alert('❌ Erro ao publicar: ' + err.message);
+      } catch (err) {
+        alert('❌ Erro ao publicar: ' + err.message);
       }
     });
   </script>
