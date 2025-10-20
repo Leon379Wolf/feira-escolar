@@ -39,12 +39,12 @@
     document.getElementById('form-produto')?.addEventListener('submit', async (e) => {
       e.preventDefault();
       const produto = {
-        nome: document.getElementById('nome').value,
-        vendedor: document.getElementById('vendedor').value,
-        preco: parseFloat(document.getElementById('preco').value),
-        descricao: document.getElementById('descricao').value || '',
-         new Date()
-      };
+  nome: document.getElementById('nome').value,
+  vendedor: document.getElementById('vendedor').value,
+  preco: parseFloat(document.getElementById('preco').value),
+  descricao: document.getElementById('descricao').value || '',
+  data: new Date()  // ← Adicione "data:" antes de new Date()
+};
 
       try {
         await db.collection('produtos').add(produto);
