@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Detalhes do Produto - Feira Escolar</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .detalhes-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      max-width: 1000px;
+      margin: 20px auto;
+      padding: 0 16px;
+    }
+    .imagem-grande {
+      flex: 1;
+      min-width: 300px;
+    }
+    .imagem-grande img {
+      width: 100%;
+      height: auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .info-produto {
+      flex: 2;
+      min-width: 300px;
+    }
+    .info-produto h1 {
+      font-size: 1.8rem;
+      margin-bottom: 12px;
+      color: #333;
+    }
+    .preco-grande {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #006633;
+      margin: 12px 0;
+    }
+    .info-item {
+      margin: 8px 0;
+      color: #555;
+    }
+    .estoque-msg {
+      color: #28a745;
+      font-weight: 600;
+    }
+    .estoque-msg.esgotado {
+      color: red;
+    }
+    .vendas-msg {
+      color: #007bff;
+    }
+    .avaliacoes-secao {
+      margin: 20px 0;
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+    .estrelas-avaliacao {
+      color: #ffc107;
+      font-size: 1.2rem;
+    }
+    .avaliacao-item {
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .form-avaliacao {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #ddd;
+    }
+    .form-avaliacao label {
+      display: block;
+      margin: 10px 0 6px;
+      font-weight: 600;
+    }
+    .estrelas-input {
+      display: flex;
+      gap: 5px;
+      margin: 8px 0;
+    }
+    .estrelas-input input {
+      display: none;
+    }
+    .estrelas-input label {
+      font-size: 1.8rem;
+      cursor: pointer;
+      color: #ddd;
+    }
+    .estrelas-input input:checked ~ label,
+    .estrelas-input label:hover,
+    .estrelas-input label:hover ~ label {
+      color: #ffc107;
+    }
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-family: inherit;
+    }
+    .botoes-detalhes {
+      margin-top: 20px;
+    }
+    .botoes-detalhes button {
+      padding: 12px 24px;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    .btn-carrinho {
+      background-color: #006633;
+      color: white;
+    }
+    .btn-carrinho:hover {
+      background-color: #004d26;
+    }
+    .btn-voltar {
+      background-color: #f1f1f1;
+      color: #333;
+    }
+    .btn-voltar:hover {
+      background-color: #e0e0e0;
+    }
+    .btn-excluir {
+      background-color: #dc3545;
+      color: white;
+    }
+    .btn-excluir:hover {
+      background-color: #c82333;
+    }
+    .carregando {
+      text-align: center;
+      padding: 40px;
+      font-size: 1.2rem;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Detalhes do Produto</h1>
+    <a href="index.html" class="btn-link">← Voltar à loja</a>
+  </header>
+
+  <main>
+    <div id="detalhes-produto" class="carregando">
+      Carregando produto...
+    </div>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="app.js"></script>
+  <script>
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+
+    let produtoAtual = null;
+
+    function renderizarEstrelas(media) {
+      const estrelas = Math.round(media);
+      let html = '';
+      for (let i = 1; i <= 5; i++) {
+        html += `<span>${i <= estrelas ? '★' : '☆'}</span>`;
+      }
+      return `<span class="estrelas-avaliacao">${html} (${media.toFixed(1)})</span>`;
+    }
+
+    async function carregarDetalhes() {
+      const id = getQueryParam('id');
+      if (!id) {
+        document.getElementById('detalhes-produto').innerHTML = '<p>Produto não encontrado.</p>';
+        return;
+      }
+
+      try {
+        const doc = await db.collection('produtos').doc(id).get();
+        if (!doc.exists) {
+          document.getElementById('detalhes-produto').innerHTML = '<p>Produto não encontrado.</p>';
+          return;
+        }
+
+        const p = doc.data();
+        produtoAtual = { id: doc.id, ...p };
+
+        const imagemHtml = p.imagem 
+          ? `<img src="${p.imagem}" alt="${p.nome}">`
+          : `<div style="background:#f0f0f0; height:300px; display:flex; align-items:center; justify-content:center; color:#999;">Sem imagem</div>`;
+
+        const estoque = p.estoque || 0;
+        const estoqueMsgClass = estoque > 0 ? 'estoque-msg' : 'estoque-msg esgotado';
+        const estoqueMsgText = estoque > 0 
+          ? `📦 Disponível: ${estoque} unid.` 
+          : '❌ Produto esgotado';
+
+        const totalVendas = p.totalVendas || 0;
+        const vendasMsg = `🛒 ${totalVendas} venda${totalVendas !== 1 ? 's' : ''}`;
+
+        const avaliacoes = p.avaliacoes || [];
+        const mediaAvaliacao = avaliacoes.length > 0 
+          ? avaliacoes.reduce((soma, a) => soma + a.estrelas, 0) / avaliacoes.length 
+          : 0;
+        const avaliacaoHtml = avaliacoes.length > 0 
+          ? `
+            <div class="avaliacoes-secao">
+              <h3>Avaliações (${avaliacoes.length})</h3>
+              ${renderizarEstrelas(mediaAvaliacao)}
+              <div style="margin-top:12px;">
+                ${avaliacoes.map(a => `
+                  <div class="avaliacao-item">
+                    <div>${'★'.repeat(a.estrelas)}${'☆'.repeat(5 - a.estrelas)}</div>
+                    <div>${a.comentario}</div>
+                    <div style="font-size:0.85rem; color:#888;">${new Date(a.data).toLocaleDateString('pt-BR')}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `
+          : '<div class="avaliacoes-secao"><p>Nenhuma avaliação ainda.</p></div>';
+
+        const quantidadeHtml = estoque > 0 
+          ? `
+            <div class="quantidade-selecao">
+              <label for="qtd-input">Quantidade:</label>
+              <input type="number" id="qtd-input" class="quantidade-input" 
+                     value="1" min="1" max="${estoque}" 
+                     oninput="validarQuantidade(${estoque})">
+            </div>
+          `
+          : '';
+
+        // Botão de exclusão só para admin
+        const botaoExcluir = typeof ehAdmin === 'function' && ehAdmin() 
+          ? `<button class="btn-excluir" onclick="excluirProduto('${doc.id}')">
+               Excluir Produto
+             </button>`
+          : '';
+
+        document.getElementById('detalhes-produto').innerHTML = `
+          <div class="detalhes-container">
+            <div class="imagem-grande">
+              ${imagemHtml}
+            </div>
+            <div class="info-produto">
+              <h1>${p.nome || 'Sem nome'}</h1>
+              <div class="preco-grande">R$ ${typeof p.preco === 'number' ? p.preco.toFixed(2) : p.preco}</div>
+              <div class="${estoqueMsgClass}">${estoqueMsgText}</div>
+              <div class="info-item vendas-msg">${vendasMsg}</div>
+              <div class="info-item"><strong>Vendedor:</strong> ${p.vendedor || 'Anônimo'}</div>
+              <div class="info-item"><strong>Departamento:</strong> ${p.departamento || '—'}</div>
+              ${p.descricao ? `<div class="descricao"><strong>Descrição:</strong><br>${p.descricao}</div>` : ''}
+              
+              ${quantidadeHtml}
+
+              <div class="botoes-detalhes">
+                <button class="btn-carrinho" onclick="adicionarAoCarrinhoComQuantidade()" 
+                        ${estoque <= 0 ? 'disabled' : ''}>
+                  Adicionar ao carrinho
+                </button>
+                <button class="btn-voltar" onclick="window.history.back()">Voltar</button>
+                ${botaoExcluir}
+              </div>
+
+              <div class="form-avaliacao">
+                <h3>Avalie este produto</h3>
+                <form onsubmit="event.preventDefault(); enviarAvaliacaoForm('${doc.id}')">
+                  <div class="estrelas-input">
+                    <input type="radio" id="est5" name="estrelas" value="5"><label for="est5">★</label>
+                    <input type="radio" id="est4" name="estrelas" value="4"><label for="est4">★</label>
+                    <input type="radio" id="est3" name="estrelas" value="3"><label for="est3">★</label>
+                    <input type="radio" id="est2" name="estrelas" value="2"><label for="est2">★</label>
+                    <input type="radio" id="est1" name="estrelas" value="1"><label for="est1">★</label>
+                  </div>
+                  <label for="comentario">Comentário (opcional):</label>
+                  <textarea id="comentario" rows="3"></textarea>
+                  <button type="submit" style="margin-top:10px;">Enviar Avaliação</button>
+                </form>
+              </div>
+
+              ${avaliacaoHtml}
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        console.error("Erro ao carregar produto:", err);
+        document.getElementById('detalhes-produto').innerHTML = '<p>Erro ao carregar produto.</p>';
+      }
+    }
+
+    function validarQuantidade(max) {
+      const input = document.getElementById('qtd-input');
+      if (input) {
+        let valor = parseInt(input.value) || 1;
+        if (valor < 1) valor = 1;
+        if (valor > max) valor = max;
+        input.value = valor;
+      }
+    }
+
+    function adicionarAoCarrinhoComQuantidade() {
+      if (!produtoAtual) return;
+      const input = document.getElementById('qtd-input');
+      const qtd = input ? parseInt(input.value) || 1 : 1;
+      const estoque = produtoAtual.estoque || 0;
+      if (qtd > estoque) {
+        alert('⚠️ Quantidade excede o estoque.');
+        return;
+      }
+      adicionarAoCarrinho(produtoAtual.id, produtoAtual.nome, produtoAtual.preco, estoque, qtd);
+    }
+
+    function enviarAvaliacaoForm(produtoId) {
+      const estrelas = document.querySelector('input[name="estrelas"]:checked')?.value;
+      const comentario = document.getElementById('comentario').value;
+      enviarAvaliacao(produtoId, estrelas, comentario);
+    }
+
+    window.onload = carregarDetalhes;
+  </script>
+</body>
+</html>

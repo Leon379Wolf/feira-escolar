@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Carrinho - Feira Escolar</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .item-carrinho {
+      background: white;
+      padding: 16px;
+      margin: 12px 0;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .total {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #006633;
+      margin: 20px 0;
+      text-align: right;
+    }
+    #botoes {
+      text-align: center;
+      margin-top: 24px;
+    }
+    #botoes button {
+      padding: 12px 28px;
+      font-size: 1.1rem;
+      margin: 0 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    #btn-finalizar {
+      background-color: #006633;
+      color: white;
+    }
+    #btn-finalizar:hover {
+      background-color: #004d26;
+    }
+    #btn-finalizar:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🛒 Meu Carrinho</h1>
+    <a href="index.html" class="btn-link">← Continuar comprando</a>
+  </header>
+
+  <main>
+    <div id="lista-carrinho">
+      <p>Carregando carrinho...</p>
+    </div>
+    <div id="botoes">
+      <button onclick="window.finalizarCompraSimulada()" id="btn-finalizar">Finalizar Compra (Simulada)</button>
+      <button onclick="limparCarrinho()">Limpar Carrinho</button>
+    </div>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="app.js"></script>
+  <script>
+    let carrinho = JSON.parse(localStorage.getItem('carrinho-feira')) || [];
+
+    function atualizarCarrinho() {
+      const container = document.getElementById('lista-carrinho');
+      if (carrinho.length === 0) {
+        container.innerHTML = '<h2>Seu carrinho está vazio</h2><p>Adicione produtos na <a href="index.html">loja</a>!</p>';
+        document.getElementById('btn-finalizar').disabled = true;
+        return;
+      }
+      document.getElementById('btn-finalizar').disabled = false;
+      let total = 0;
+      let html = '<h2>Itens no carrinho:</h2>';
+      carrinho.forEach((item, index) => {
+        const subtotal = item.preco * item.quantidade;
+        total += subtotal;
+        html += `
+          <div class="item-carrinho">
+            <strong>${item.nome}</strong><br>
+            R$ ${item.preco.toFixed(2)} × ${item.quantidade} = R$ ${subtotal.toFixed(2)}
+            <button onclick="removerItem(${index})" style="float:right; margin-top:-5px;">Remover</button>
+          </div>
+        `;
+      });
+      html += `<div class="total">Total: R$ ${total.toFixed(2)}</div>`;
+      container.innerHTML = html;
+    }
+
+    function removerItem(index) {
+      carrinho.splice(index, 1);
+      localStorage.setItem('carrinho-feira', JSON.stringify(carrinho));
+      atualizarCarrinho();
+      if (typeof atualizarQtdCarrinho === 'function') atualizarQtdCarrinho();
+    }
+
+    function limparCarrinho() {
+      if (confirm('Tem certeza que deseja limpar o carrinho?')) {
+        carrinho = [];
+        localStorage.removeItem('carrinho-feira');
+        atualizarCarrinho();
+        if (typeof atualizarQtdCarrinho === 'function') atualizarQtdCarrinho();
+      }
+    }
+
+    atualizarCarrinho();
+  </script>
+</body>
+</html>

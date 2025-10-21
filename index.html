@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Feira Escolar - Compre Aqui!</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Feira Escolar 2025</h1>
+    <a href="login.html" class="btn-link" id="btn-cadastro">🔐 Login para Cadastrar</a>
+    <span id="logout-link" style="display:none; margin-left:12px; color:white;">
+      | <a href="#" onclick="fazerLogout(); return false;" style="color:white; text-decoration:underline;">Sair</a>
+    </span>
+  </header>
+
+  <main>
+    <div class="filtro-container">
+      <div>
+        <label><strong>Filtrar por departamento:</strong></label>
+        <select id="filtro-departamento" onchange="filtrarProdutos()">
+          <option value="">Todos os departamentos</option>
+          <option value="Hortifrúti">Hortifrúti</option>
+          <option value="Açougue">Açougue</option>
+          <option value="Frios e Laticínios">Frios e Laticínios</option>
+          <option value="Padaria e Confeitaria">Padaria e Confeitaria</option>
+          <option value="Mercearia">Mercearia</option>
+          <option value="Bebidas">Bebidas</option>
+          <option value="Congelados">Congelados</option>
+          <option value="Comida Pronta">Comida Pronta</option>
+          <option value="Higiene Pessoal e Cosméticos">Higiene Pessoal e Cosméticos</option>
+          <option value="Limpeza Doméstica">Limpeza Doméstica</option>
+          <option value="Material de Limpeza">Material de Limpeza</option>
+          <option value="Utensílios Domésticos">Utensílios Domésticos</option>
+          <option value="Bazar">Bazar</option>
+          <option value="Pet Shop">Pet Shop</option>
+          <option value="Produtos para Animais">Produtos para Animais</option>
+          <option value="Papelaria">Papelaria</option>
+          <option value="Revistas">Revistas</option>
+        </select>
+      </div>
+      <a href="carrinho.html" class="carrinho-link">
+        🛒 Ver carrinho (<span id="qtd-carrinho">0</span>)
+      </a>
+    </div>
+
+    <div id="produtos-container">
+      <h2>Produtos Disponíveis</h2>
+      <div id="produtos"></div>
+    </div>
+  </main>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="app.js"></script>
+
+  <script>
+    function fazerLogout() {
+      sessionStorage.removeItem('aluno_logado');
+      alert('✅ Você saiu com sucesso.');
+      atualizarInterface();
+    }
+
+    function atualizarInterface() {
+      const alunoLogado = sessionStorage.getItem('aluno_logado');
+      const btnCadastro = document.getElementById('btn-cadastro');
+      const logoutLink = document.getElementById('logout-link');
+
+      if (alunoLogado) {
+        btnCadastro.textContent = '➕ Cadastrar Produto';
+        btnCadastro.href = 'vender.html';
+        logoutLink.style.display = 'inline';
+      } else {
+        btnCadastro.textContent = '🔐 Login para Cadastrar';
+        btnCadastro.href = 'login.html';
+        logoutLink.style.display = 'none';
+      }
+    }
+
+    // Atualiza ao carregar a página
+    document.addEventListener('DOMContentLoaded', function() {
+      atualizarInterface();
+    });
+  </script>
+</body>
+</html>
