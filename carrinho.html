@@ -2,245 +2,239 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Carrinho - Feira Escolar</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header style="background: var(--cor-amarelo); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-    <div style="display: flex; align-items: center; gap: 12px;">
-      <img src="https://firebasestorage.googleapis.com/v0/b/feira-escolar-2025.firebasestorage.app/o/produtos%2Fcapa.png?alt=media"
-           alt="Logo Feira Escolar"
-           style="height: 64px; width: auto; border-radius: 4px;">
-      <span id="titulo-pagina" style="font-size: 1.2rem; font-weight: bold; color: var(--cor-principal); font-family: var(--fonte-titulo);" onclick="window.location.href='index.html'" style="cursor:pointer;">
-        Feira Escolar 2025
-      </span>
+  <header>
+    <a href="index.html" class="btn-link">← Voltar à loja</a>
+    <div style="display:flex; align-items:center; gap:20px;">
+        <span id="saudacao" style="font-weight:600; color:white;">Olá, Convidado</span>
+        <div id="login-link" style="color:white;"><a href="login.html">Entrar</a></div>
     </div>
-
-    <div style="flex: 1; max-width: 500px; margin: 0 20px;">
-      <input type="text" id="busca-produtos" placeholder="Buscar produtos..." disabled
-             style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem;">
-    </div>
-
-    <nav style="display: flex; align-items: center; gap: 20px; position: relative;">
-      
-      <div class="menu-container" style="position: relative;">
-        <button id="btn-categorias" class="btn-acao" style="background: var(--cor-principal); color: white; padding: 10px; border-radius: 50%; border: none; font-weight: bold; cursor: pointer; display: none;">
-          ☰
-        </button>
-        <div id="menu-categorias" class="menu-dropdown" style="display: none; position: absolute; top: 45px; left: 0; background: white; border: 1px solid #eee; border-radius: 6px; z-index: 10; min-width: 150px; box-shadow: var(--sombra);">
-          </div>
-      </div>
-      
-      <a href="vender.html" class="btn-acao">
-        Vender
-      </a>
-
-      <a href="carrinho.html" class="btn-acao" style="position: relative;">
-        🛒 Carrinho
-        <span id="qtd-carrinho"
-              style="position: absolute; top: -8px; right: -12px; background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.75rem; font-weight: bold;">
-          0
-        </span>
-      </a>
-
-      <div id="usuario-container" style="position: relative; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-        <span id="nome-usuario" style="font-weight: 600; color: var(--cor-principal);">Convidado</span>
-        <div id="menu-usuario" class="menu-dropdown" style="display: none; position: absolute; top: 45px; right: 0; background: white; border: 1px solid #eee; border-radius: 6px; z-index: 10; min-width: 150px; box-shadow: var(--sombra);">
-          </div>
-      </div>
-    </nav>
   </header>
 
   <main>
-    <div class="container" id="carrinho-container">
-      <p class="carregando">Carregando carrinho...</p>
+    <section class="carrinho-header">
+        <h1>🛒 Meu Carrinho</h1>
+        <div class="carrinho-info">
+            <p>Total: <strong id="total-carrinho">R$ 0,00</strong></p> 
+            <button onclick="limparCarrinho()" class="btn-limpar">Limpar Carrinho</button>
+        </div>
+    </section>
+
+    <div id="carrinho-container" class="carrinho-itens">
+        <p class="carrinho-vazio">Seu carrinho está vazio.</p>
     </div>
 
-    <div id="botoes" class="container">
-      <button onclick="window.location.href='index.html'" style="background-color: #f0f0f0;">← Continuar Comprando</button>
-      <button id="btn-limpar" onclick="limparCarrinho()">Limpar Carrinho</button>
-      <button id="btn-finalizar">Finalizar Compra</button>
+    <div class="carrinho-footer">
+        <p id="erro" class="mensagem-erro"></p> <button id="btn-finalizar" class="btn-finalizar" disabled>
+            Finalizar Compra
+        </button>
+    </div>
+
+    <div style="text-align: center; margin-top: 15px;">
+        <a href="index.html" style="color: #666;">← Voltar à Loja</a>
     </div>
   </main>
 
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
   <script src="app.js"></script>
 
   <script>
-    // Funções utilitárias do cabeçalho
-    function atualizarQtdCarrinho() {
-      const carrinho = JSON.parse(localStorage.getItem('carrinho-feira')) || [];
-      const totalItens = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
-      document.getElementById('qtd-carrinho').textContent = totalItens;
-    }
-
+    // --- FUNÇÕES DE UTILIDADE ---
     function atualizarNomeUsuario() {
-      const container = document.getElementById('usuario-container');
-      const nomeEl = document.getElementById('nome-usuario');
-      const menu = document.getElementById('menu-usuario');
-      const nome = sessionStorage.getItem('aluno_logado');
+        const nomeUsuario = sessionStorage.getItem('aluno_logado');
+        const saudacaoEl = document.getElementById('saudacao');
+        const loginLink = document.getElementById('login-link');
 
-      if (nome) {
-        nomeEl.textContent = nome.length > 10 ? nome.split(' ')[0] : nome;
-        container.style.cursor = 'pointer';
-        menu.innerHTML = `
-          <div style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #eee;" onclick="alert('Minha Conta: ${nome}')">
-            👤 Minha Conta
-          </div>
-          <div style="padding: 8px 12px; cursor: pointer;" onclick="sessionStorage.removeItem('aluno_logado'); alert('✅ Você saiu.'); location.reload();">
-            🚪 Sair
-          </div>
-        `;
-      } else {
-        nomeEl.textContent = 'Convidado';
-        container.style.cursor = 'pointer';
-        menu.innerHTML = `
-          <div style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #eee;" onclick="document.getElementById('menu-usuario').style.display='none';">
-            Continuar como convidado
-          </div>
-          <div style="padding: 8px 12px; cursor: pointer;" onclick="window.location.href='login.html'">
-            Fazer login
-          </div>
-        `;
-      }
+        if (nomeUsuario && saudacaoEl && loginLink) {
+            saudacaoEl.textContent = nomeUsuario === 'admin' 
+                ? 'Olá, Admin (Vendedor)' 
+                : `Olá, ${nomeUsuario} (Vendedor)`;
+            
+            loginLink.innerHTML = `<a href="#" onclick="fazerLogout()">Sair</a>`;
+        }
     }
 
-    // Adiciona os listeners de clique para abrir/fechar menus
-    document.getElementById('usuario-container')?.addEventListener('click', function(e) {
-      e.stopPropagation();
-      const menu = document.getElementById('menu-usuario');
-      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    });
+    function fazerLogout() {
+        sessionStorage.removeItem('aluno_logado');
+        window.location.href = 'login.html';
+    }
 
-    document.getElementById('btn-categorias')?.addEventListener('click', function(e) {
-      e.stopPropagation();
-      const menu = document.getElementById('menu-categorias');
-      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-    });
+    function atualizarQtdCarrinho() {
+        const carrinho = JSON.parse(localStorage.getItem('carrinho-feira')) || [];
+        const qtdEl = document.getElementById('carrinho-qtd');
+        if (qtdEl) {
+            qtdEl.textContent = carrinho.length;
+        }
+    }
 
-
-    // Lógica do Carrinho
+    // --- LÓGICA DO CARRINHO E COMPRA ---
     let carrinho = JSON.parse(localStorage.getItem('carrinho-feira')) || [];
     const container = document.getElementById('carrinho-container');
 
     function atualizarCarrinho() {
-      carrinho = JSON.parse(localStorage.getItem('carrinho-feira')) || [];
+        // FIX: Acessa os elementos do footer/header antes de usá-los
+        const totalCarrinhoEl = document.getElementById('total-carrinho');
+        const btnFinalizarEl = document.getElementById('btn-finalizar');
 
-      if (carrinho.length === 0) {
-        container.innerHTML = '<h2>Seu carrinho está vazio</h2><p>Adicione produtos na <a href="index.html">loja</a>!</p>';
-        document.getElementById('btn-finalizar').disabled = true;
-        return;
-      }
-      document.getElementById('btn-finalizar').disabled = false;
-      let total = 0;
-      let html = '<h2>Itens no carrinho:</h2>';
-      carrinho.forEach((item, index) => {
-        const subtotal = item.preco * item.quantidade;
-        total += subtotal;
-        html += `
-          <div class="item-carrinho">
-            <div>
-                <strong>${item.nome}</strong><br>
-                R$ ${item.preco.toFixed(2)} × ${item.quantidade} = R$ ${subtotal.toFixed(2)}
-            </div>
-            <button onclick="removerItem(${index})">Remover</button>
-          </div>
-        `;
-      });
-      html += `<div class="total">Total: R$ ${total.toFixed(2)}</div>`;
-      container.innerHTML = html;
+        container.innerHTML = '';
+        if (carrinho.length === 0) {
+            container.innerHTML = '<p class="carrinho-vazio">Seu carrinho está vazio.</p>';
+            if (totalCarrinhoEl) totalCarrinhoEl.textContent = 'R$ 0,00';
+            if (btnFinalizarEl) btnFinalizarEl.disabled = true;
+            return;
+        }
+
+        let totalGeral = 0;
+        if (btnFinalizarEl) btnFinalizarEl.disabled = false;
+
+        carrinho.forEach((item, index) => {
+            const totalItem = item.preco * item.quantidade;
+            totalGeral += totalItem;
+
+            const itemHTML = `
+                <div class="carrinho-item">
+                    <div class="item-detalhes">
+                        <h3>${item.nome}</h3>
+                        <p>R$ ${item.preco.toFixed(2)} x ${item.quantidade} un.</p>
+                    </div>
+                    <div class="item-total">
+                        R$ ${totalItem.toFixed(2)}
+                        <button onclick="removerItem(${index})">Remover</button>
+                    </div>
+                </div>
+            `;
+            container.innerHTML += itemHTML;
+        });
+
+        if (totalCarrinhoEl) totalCarrinhoEl.textContent = `R$ ${totalGeral.toFixed(2)}`;
     }
 
     function removerItem(index) {
-      carrinho.splice(index, 1);
-      localStorage.setItem('carrinho-feira', JSON.stringify(carrinho));
-      atualizarCarrinho();
-      atualizarQtdCarrinho();
+        carrinho.splice(index, 1);
+        localStorage.setItem('carrinho-feira', JSON.stringify(carrinho));
+        atualizarQtdCarrinho();
+        atualizarCarrinho();
     }
 
     function limparCarrinho() {
-      if (confirm('Tem certeza que deseja limpar o carrinho?')) {
-        carrinho = [];
-        localStorage.removeItem('carrinho-feira');
-        atualizarCarrinho();
-        atualizarQtdCarrinho();
-      }
+        if (confirm('Tem certeza que deseja limpar todo o carrinho?')) {
+            carrinho = [];
+            localStorage.removeItem('carrinho-feira');
+            atualizarQtdCarrinho();
+            atualizarCarrinho();
+        }
     }
 
-    // Lógica de Finalizar Compra (com transação)
+
+    // FIX CRÍTICO: Função Finalizar Compra com Transação Correta
     function finalizarCompra() {
-      if (!confirm('Deseja realmente finalizar a compra? O estoque será atualizado.')) return;
+        const nomeVendedor = sessionStorage.getItem('aluno_logado');
+        // FIX: Garante que o elemento 'erro' existe
+        const erroEl = document.getElementById('erro'); 
+        if (erroEl) erroEl.textContent = ''; // Limpa erro anterior
 
-      if (carrinho.length === 0) {
-        alert('Seu carrinho está vazio.');
-        return;
-      }
-      
-      const pedido = {
-        data: firebase.firestore.FieldValue.serverTimestamp(),
-        comprador: sessionStorage.getItem('aluno_logado') || 'Convidado',
-        itens: carrinho.map(item => ({
-          id: item.id,
-          nome: item.nome,
-          preco: item.preco,
-          quantidade: item.quantidade
-        })),
-        total: carrinho.reduce((acc, item) => acc + item.preco * item.quantidade, 0),
-        status: 'Pendente' 
-      };
+        if (!nomeVendedor) {
+            if (erroEl) erroEl.textContent = 'Você deve estar logado para finalizar a compra.';
+            return;
+        }
 
-      try {
+        if (carrinho.length === 0) {
+            if (erroEl) erroEl.textContent = 'O carrinho está vazio.';
+            return;
+        }
+
+        if (typeof db === 'undefined') {
+            if (erroEl) erroEl.textContent = '❌ Erro: Firebase não carregado. Verifique a conexão.';
+            return;
+        }
+
+        const estoqueRef = db.collection('produtos'); // Usamos 'produtos' para estoque
+        const vendasRef = db.collection('vendas');
+
+        // 1. Mapeia os itens do carrinho para referências de documentos de estoque
+        const itemsParaTransacao = carrinho.map(item => ({
+            ref: estoqueRef.doc(item.id),
+            quantidadeComprada: item.quantidade,
+            nomeProduto: item.nome
+        }));
+
         db.runTransaction(async (transaction) => {
-          const updates = [];
+            // 2. Obtém todas as informações de estoque DENTRO da transação
+            // Usa Promise.all() para buscar todos os documentos de estoque de uma vez (FIX: Usando transaction.get)
+            const getPromises = itemsParaTransacao.map(item => transaction.get(item.ref));
+            const snapshots = await Promise.all(getPromises);
 
-          for (const item of carrinho) {
-            const produtoRef = db.collection('produtos').doc(item.id);
-            updates.push(produtoRef);
-          }
+            // 3. Verifica o estoque e prepara as atualizações
+            for (let i = 0; i < snapshots.length; i++) {
+                const snapshot = snapshots[i];
+                const itemTransacao = itemsParaTransacao[i];
+                const data = snapshot.data();
 
-          const docs = await transaction.getAll(...updates);
+                if (!snapshot.exists) {
+                    throw new Error(`O produto "${itemTransacao.nomeProduto}" não existe no estoque.`);
+                }
 
-          for (let i = 0; i < docs.length; i++) {
-            const doc = docs[i];
-            const item = carrinho[i];
-            const estoqueAtual = doc.data()?.estoque || 0;
+                const estoqueAtual = data.estoque; // Campo no Firestore é 'estoque'
+                const novoEstoque = estoqueAtual - itemTransacao.quantidadeComprada;
 
-            if (estoqueAtual < item.quantidade) {
-              throw new Error(`Estoque insuficiente para "${item.nome}". Apenas ${estoqueAtual} unid. disponível(eis).`);
+                if (novoEstoque < 0) {
+                    throw new Error(`Estoque insuficiente para "${itemTransacao.nomeProduto}". Disponível: ${estoqueAtual}`);
+                }
+
+                // 4. Aplica a atualização de estoque
+                transaction.update(itemTransacao.ref, {
+                    estoque: novoEstoque // Atualiza o campo 'estoque'
+                });
             }
 
-            transaction.update(doc.ref, {
-              estoque: estoqueAtual - item.quantidade,
-              vendas: firebase.firestore.FieldValue.increment(item.quantidade)
-            });
-          }
+            // 5. Registra o pedido de venda
+            const pedido = {
+                vendedor: nomeVendedor,
+                data: firebase.firestore.FieldValue.serverTimestamp(),
+                // Pega o total do elemento que foi atualizado
+                total: parseFloat(document.getElementById('total-carrinho')?.textContent?.replace('R$ ', '').replace(',', '.') || '0'), 
+                itens: carrinho.map(item => ({
+                    id: item.id,
+                    nome: item.nome,
+                    preco: item.preco,
+                    quantidade: item.quantidade
+                }))
+            };
 
-          await db.collection('pedidos').add(pedido);
+            // Adiciona o pedido à coleção 'vendas'
+            return transaction.set(vendasRef.doc(), pedido);
 
         }).then(() => {
-          localStorage.removeItem('carrinho-feira');
-          atualizarQtdCarrinho();
-          alert('✅ Compra finalizada com sucesso! Seu pedido foi registrado.');
-          window.location.href = 'index.html';
-
+            // Sucesso
+            localStorage.removeItem('carrinho-feira');
+            atualizarQtdCarrinho();
+            alert('✅ Compra finalizada com sucesso! Seu pedido foi registrado.');
+            window.location.href = 'index.html';
         }).catch((error) => {
-          alert('❌ Erro ao processar a compra: ' + error.message);
+            // Falha 
+            const msgErro = `❌ Erro ao processar a compra: ${error.message}`;
+            if (erroEl) erroEl.textContent = msgErro;
+            console.error('Erro na transação de compra:', error);
         });
-
-      } catch (err) {
-        alert('❌ Erro inesperado: ' + err.message);
-      }
     }
 
-    document.getElementById('btn-finalizar').onclick = finalizarCompra;
+    // Listener para o botão de finalizar
+    const btnFinalizar = document.getElementById('btn-finalizar');
+    if (btnFinalizar) {
+        btnFinalizar.onclick = finalizarCompra;
+    }
 
-    // Chamadas iniciais
+
+    // --- CHAMADAS INICIAIS ---
     window.addEventListener('load', () => {
-      atualizarNomeUsuario();
-      atualizarQtdCarrinho();
-      atualizarCarrinho();
+        atualizarNomeUsuario();
+        atualizarQtdCarrinho();
+        atualizarCarrinho();
     });
   </script>
 </body>
