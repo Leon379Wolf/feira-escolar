@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cadastrar Produto - Feira Escolar</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header style="background: var(--cor-amarelo); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <img src="https://firebasestorage.googleapis.com/v0/b/feira-escolar-2025.firebasestorage.app/o/produtos%2Fcapa.png?alt=media"
+           alt="Logo Feira Escolar"
+           style="height: 64px; width: auto; border-radius: 4px;">
+      <span id="titulo-pagina" style="font-size: 1.2rem; font-weight: bold; color: var(--cor-principal); font-family: var(--fonte-titulo);" onclick="window.location.href='index.html'" style="cursor:pointer;">
+        Feira Escolar 2025
+      </span>
+    </div>
+
+    <div style="flex: 1; max-width: 500px; margin: 0 20px;">
+      <input type="text" id="busca-produtos" placeholder="Buscar produtos..." disabled
+             style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem;">
+    </div>
+
+    <nav style="display: flex; align-items: center; gap: 20px; position: relative;">
+      
+      <div class="menu-container" style="position: relative;">
+        <button id="btn-categorias" class="btn-acao" style="background: var(--cor-principal); color: white; padding: 10px; border-radius: 50%; border: none; font-weight: bold; cursor: pointer; display: none;">
+          ☰
+        </button>
+        <div id="menu-categorias" class="menu-dropdown" style="display: none; position: absolute; top: 45px; left: 0; background: white; border: 1px solid #eee; border-radius: 6px; z-index: 10; min-width: 150px; box-shadow: var(--sombra);">
+          </div>
+      </div>
+      
+      <a href="vender.html" class="btn-acao">
+        Vender
+      </a>
+
+      <a href="carrinho.html" class="btn-acao" style="position: relative;">
+        🛒 Carrinho
+        <span id="qtd-carrinho"
+              style="position: absolute; top: -8px; right: -12px; background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.75rem; font-weight: bold;">
+          0
+        </span>
+      </a>
+
+      <div id="usuario-container" style="position: relative; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+        <span id="nome-usuario" style="font-weight: 600; color: var(--cor-principal);">Convidado</span>
+        <div id="menu-usuario" class="menu-dropdown" style="display: none; position: absolute; top: 45px; right: 0; background: white; border: 1px solid #eee; border-radius: 6px; z-index: 10; min-width: 150px; box-shadow: var(--sombra);">
+          </div>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <div class="container">
+      <h2>📦 Cadastre seu Produto</h2>
+    </div>
+    <form id="form-produto" class="container">
+      <label>Departamento:</label>
+      <select id="departamento" required>
+        <option value="">— Selecione —</option>
+        <option value="Hortifrúti">Hortifrúti</option>
+        <option value="Açougue">Açougue</option>
+        <option value="Frios e Laticínios">Frios e Laticínios</option>
+        <option value="Padaria e Confeitaria">Padaria e Confeitaria</option>
+        <option value="Mercearia">Mercearia</option>
+        <option value="Bebidas">Bebidas</option>
+        <option value="Congelados">Congelados</option>
+        <option value="Comida Pronta">Comida Pronta</option>
+        <option value="Higiene Pessoal e Cosméticos">Higiene Pessoal e Cosméticos</option>
+        <option value="Limpeza Doméstica">Limpeza Doméstica</option>
+        <option value="Material Escolar">Material Escolar</option>
+        <option value="Eletrônicos">Eletrônicos</option>
+        <option value="Outros">Outros</option>
+      </select>
+
+      <label for="nome">Nome do Produto:</label>
+      <input type="text" id="nome" required>
+
+      <label for="preco">Preço (R$):</label>
+      <input type="number" id="preco" step="0.01" min="0" required>
+      
+      <label for="estoque">Estoque Inicial:</label>
+      <input type="number" id="estoque" min="1" value="1" required>
+
+      <label for="descricao">Descrição:</label>
+      <textarea id="descricao" rows="4"></textarea>
+
+      <label for="imagem-arquivo">Imagem (Opcional):</label>
+      <input type="file" id="imagem-arquivo" accept="image/*">
+
+      <label for="vendedor">Nome do Vendedor (Seu nome/Equipe):</label>
+      <input type="text" id="vendedor" required>
+
+      <button type="submit">Publicar Produto</button>
+    </form>
+  </main>
+  
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+  <script src="app.js"></script>
+
+  <script>
+    // Funções utilitárias do cabeçalho
+    function atualizarQtdCarrinho() {
+      const carrinho = JSON.parse(localStorage.getItem('carrinho-feira')) || [];
+      const totalItens = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
+      document.getElementById('qtd-carrinho').textContent = totalItens;
+    }
+
+    function atualizarNomeUsuario() {
+      const container = document.getElementById('usuario-container');
+      const nomeEl = document.getElementById('nome-usuario');
+      const menu = document.getElementById('menu-usuario');
+      const nome = sessionStorage.getItem('aluno_logado');
+
+      if (nome) {
+        nomeEl.textContent = nome.length > 10 ? nome.split(' ')[0] : nome;
+        container.style.cursor = 'pointer';
+        menu.innerHTML = `
+          <div style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #eee;" onclick="alert('Minha Conta: ${nome}')">
+            👤 Minha Conta
+          </div>
+          <div style="padding: 8px 12px; cursor: pointer;" onclick="sessionStorage.removeItem('aluno_logado'); alert('✅ Você saiu.'); location.reload();">
+            🚪 Sair
+          </div>
+        `;
+      } else {
+        nomeEl.textContent = 'Convidado';
+        container.style.cursor = 'pointer';
+        menu.innerHTML = `
+          <div style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #eee;" onclick="document.getElementById('menu-usuario').style.display='none';">
+            Continuar como convidado
+          </div>
+          <div style="padding: 8px 12px; cursor: pointer;" onclick="window.location.href='login.html'">
+            Fazer login
+          </div>
+        `;
+      }
+    }
+    
+    // Adiciona os listeners de clique para abrir/fechar menus
+    document.getElementById('usuario-container')?.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const menu = document.getElementById('menu-usuario');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    });
+
+    document.getElementById('btn-categorias')?.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const menu = document.getElementById('menu-categorias');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    });
+
+    // Função específica para preencher o campo 'vendedor' automaticamente
+    function definirVendedor() {
+        const alunoLogado = sessionStorage.getItem('aluno_logado');
+        if (alunoLogado && alunoLogado !== 'admin') {
+            document.getElementById('vendedor').value = alunoLogado;
+            document.getElementById('vendedor').disabled = true; // Bloqueia para não alterar o nome de login
+        } else {
+            document.getElementById('vendedor').value = ''; 
+            document.getElementById('vendedor').disabled = false;
+        }
+    }
+    
+    // Listener do Formulário
+    document.getElementById('form-produto')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // Verifica se o usuário está logado antes de permitir o envio
+      if (!sessionStorage.getItem('aluno_logado')) {
+        alert('Você precisa estar logado para publicar um produto.');
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      const fileInput = document.getElementById('imagem-arquivo');
+      let imagemUrl = '';
+      
+      const storage = firebase.storage();
+
+      if (fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        const safeName = file.name.replace(/\s+/g, '_');
+        const fileName = `produtos/${Date.now()}_${safeName}`;
+        const fileRef = storage.ref().child(fileName);
+
+        try {
+          alert('⏳ Enviando imagem... Aguarde.');
+          await fileRef.put(file);
+          imagemUrl = await fileRef.getDownloadURL();
+        } catch (err) {
+          alert('❌ Erro ao enviar imagem: ' + err.message);
+          return;
+        }
+      }
+
+      const produto = {
+        nome: document.getElementById('nome').value,
+        // Garante que o nome do vendedor vem do campo (que pode estar desabilitado)
+        vendedor: document.getElementById('vendedor').value,
+        preco: parseFloat(document.getElementById('preco').value),
+        descricao: document.getElementById('descricao').value || '',
+        imagem: imagemUrl,
+        estoque: parseInt(document.getElementById('estoque').value) || 1,
+        departamento: document.getElementById('departamento').value,
+        criadoEm: Date.now()
+      };
+
+      try {
+        await db.collection('produtos').add(produto);
+        alert('✅ Produto publicado com sucesso!');
+        document.getElementById('form-produto').reset();
+        definirVendedor(); // Redefine o nome do vendedor após o reset
+      } catch (err) {
+        alert('❌ Erro ao publicar: ' + err.message);
+      }
+    });
+
+    window.addEventListener('load', () => {
+      // Chamadas iniciais para o cabeçalho e formulário
+      atualizarNomeUsuario();
+      atualizarQtdCarrinho();
+      definirVendedor();
+    });
+  </script>
+</body>
+</html>

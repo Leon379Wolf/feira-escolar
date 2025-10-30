@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Feira Escolar - Compre Aqui!</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header style="background: var(--cor-amarelo); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <img src="https://firebasestorage.googleapis.com/v0/b/feira-escolar-2025.firebasestorage.app/o/produtos%2Fcapa.png?alt=media"
+           alt="Logo Feira Escolar"
+           style="height: 64px; width: auto; border-radius: 4px;">
+      <span id="titulo-pagina" style="font-size: 1.2rem; font-weight: bold; color: var(--cor-principal); font-family: var(--fonte-titulo);" onclick="window.location.href='index.html'" style="cursor:pointer;">
+        Feira Escolar 2025
+      </span>
+    </div>
+
+    <div style="flex: 1; max-width: 500px; margin: 0 20px;">
+      <input type="text" id="busca-produtos" placeholder="Buscar produtos por nome, vendedor ou departamento..."
+             style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem;">
+    </div>
+
+    <nav style="display: flex; align-items: center; gap: 20px; position: relative;">
+      
+      <div class="menu-container" style="position: relative;">
+        <button id="btn-categorias" class="btn-acao" style="background: var(--cor-principal); color: white; padding: 10px; border-radius: 50%; border: none; font-weight: bold; cursor: pointer;">
+          ☰
+        </button>
+        <div id="menu-categorias" class="menu-dropdown" style="display: none; position: absolute; top: 45px; left: 0; background: white; border: 1px solid #eee; border-radius: 6px; z-index: 10; min-width: 150px; box-shadow: var(--sombra);">
+          </div>
+      </div>
+      
+      <a href="vender.html" class="btn-acao">
+        Vender
+      </a>
+
+      <a href="carrinho.html" class="btn-acao" style="position: relative;">
+        🛒 Carrinho
+        <span id="qtd-carrinho"
+              style="position: absolute; top: -8px; right: -12px; background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.75rem; font-weight: bold;">
+          0
+        </span>
+      </a>
+
+      <div id="usuario-container" style="position: relative; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+        <span id="nome-usuario" style="font-weight: 600; color: var(--cor-principal);">Convidado</span>
+        <div id="menu-usuario" class="menu-dropdown" style="display: none; position: absolute; top: 45px; right: 0; background: white; border: 1px solid #eee; border-radius: 6px; z-index: 10; min-width: 150px; box-shadow: var(--sombra);">
+          </div>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <div class="container">
+      <h2 id="titulo-secao" style="color: var(--cor-principal); margin-bottom: 20px; font-family: var(--fonte-titulo);">Produtos em Destaque</h2>
+      
+      <div id="lista-produtos">
+        <p class="carregando">Carregando produtos...</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+  <script src="app.js"></script>
+
+  <script>
+    // Funções utilitárias do cabeçalho que precisam estar na página
+    function atualizarQtdCarrinho() {
+      const carrinho = JSON.parse(localStorage.getItem('carrinho-feira')) || [];
+      const totalItens = carrinho.reduce((acc, item) => acc + item.quantidade, 0);
+      document.getElementById('qtd-carrinho').textContent = totalItens;
+    }
+
+    function atualizarNomeUsuario() {
+      const container = document.getElementById('usuario-container');
+      const nomeEl = document.getElementById('nome-usuario');
+      const menu = document.getElementById('menu-usuario');
+      const nome = sessionStorage.getItem('aluno_logado');
+
+      if (nome) {
+        nomeEl.textContent = nome.length > 10 ? nome.split(' ')[0] : nome;
+        container.style.cursor = 'pointer';
+        menu.innerHTML = `
+          <div style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #eee;" onclick="alert('Minha Conta: ${nome}')">
+            👤 Minha Conta
+          </div>
+          <div style="padding: 8px 12px; cursor: pointer;" onclick="sessionStorage.removeItem('aluno_logado'); alert('✅ Você saiu.'); location.reload();">
+            🚪 Sair
+          </div>
+        `;
+      } else {
+        nomeEl.textContent = 'Convidado';
+        container.style.cursor = 'pointer';
+        menu.innerHTML = `
+          <div style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #eee;" onclick="document.getElementById('menu-usuario').style.display='none';">
+            Continuar como convidado
+          </div>
+          <div style="padding: 8px 12px; cursor: pointer;" onclick="window.location.href='login.html'">
+            Fazer login
+          </div>
+        `;
+      }
+    }
+
+    // Adiciona os listeners de clique para abrir/fechar menus
+    document.getElementById('usuario-container')?.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const menu = document.getElementById('menu-usuario');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    });
+
+    document.getElementById('btn-categorias')?.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const menu = document.getElementById('menu-categorias');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    });
+    
+    // Chamadas iniciais
+    window.addEventListener('load', () => {
+      atualizarNomeUsuario();
+      atualizarQtdCarrinho();
+      // O carregamento e a filtragem inicial agora estão no app.js
+    });
+  </script>
+</body>
+</html>

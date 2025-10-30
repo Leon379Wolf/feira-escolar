@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login - Feira Escolar</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <form id="form-login" class="login-container">
+      <h2>👤 Acesso do Aluno/Vendedor</h2>
+      
+      <label for="codigo">Código do Aluno (Matrícula):</label>
+      <input type="text" id="codigo" required>
+
+      <label for="senha">Senha (Data de Nascimento):</label>
+      <div class="senha-wrapper">
+        <input type="password" id="senha" required>
+        <div class="toggle-senha" onclick="toggleSenha(this)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather feather-eye-off">
+                <path d="M16 8s-8 8-8 8-8-8-8-8 8-8 8-8 8 8 8 8"/>
+                <path d="M8 12.5a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9"/>
+                <line x1="1" y1="1" x2="15" y2="15" stroke="currentColor" stroke-width="2"/>
+            </svg>
+        </div>
+      </div>
+
+      <p id="erro"></p>
+      
+      <button type="submit">Fazer Login</button>
+      
+      <div style="text-align: center; margin-top: 15px;">
+        <a href="index.html" style="color: #666;">← Voltar à Loja</a>
+      </div>
+    </form>
+  </main>
+
+  <script src="alunos.js"></script>
+
+  <script>
+    // Função para mostrar/esconder a senha
+    function toggleSenha(element) {
+      const senhaInput = document.getElementById('senha');
+      const svg = element.querySelector('svg');
+
+      if (senhaInput.type === 'password') {
+        senhaInput.type = 'text';
+        // Olho aberto
+        svg.innerHTML = `
+          <path d="M16 8s-8 8-8 8-8-8-8-8 8-8 8-8 8 8 8 8"/>
+          <path d="M8 12.5a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9"/>
+        `;
+      } else {
+        senhaInput.type = 'password';
+        // Olho fechado (riscado)
+        svg.innerHTML = `
+          <path d="M16 8s-8 8-8 8-8-8-8-8 8-8 8-8 8 8 8 8"/>
+          <path d="M8 12.5a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9"/>
+          <line x1="1" y1="1" x2="15" y2="15" stroke="currentColor" stroke-width="2"/>
+        `;
+      }
+    }
+
+    // Função de Login
+    function fazerLogin() {
+      const codigo = document.getElementById('codigo').value.trim();
+      const senha = document.getElementById('senha').value.trim();
+      const erroEl = document.getElementById('erro');
+      erroEl.textContent = '';
+
+      if (!codigo || !senha) {
+        erroEl.textContent = 'Preencha o código e a senha.';
+        return;
+      }
+
+      // Login de Administrador (opcional)
+      if (codigo === 'admin' && senha === 'admin123') {
+          sessionStorage.setItem('aluno_logado', 'admin');
+          window.location.href = 'index.html';
+          return;
+      }
+
+      // Acessa a lista de alunos do alunos.js
+      const aluno = window.ALUNOS_AUTORIZADOS[codigo];
+
+      if (aluno && aluno.senha === senha) {
+        // Login bem-sucedido
+        sessionStorage.setItem('aluno_logado', aluno.nome);
+        window.location.href = 'index.html';
+      } else {
+        // Login falhou
+        erroEl.textContent = 'Código ou senha incorretos. Tente novamente.';
+      }
+    }
+
+    // Listener para o formulário
+    document.getElementById('form-login').addEventListener('submit', function(e) {
+      e.preventDefault();
+      fazerLogin();
+    });
+  </script>
+</body>
+</html>
