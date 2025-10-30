@@ -73,9 +73,15 @@
         erroEl.textContent = 'Preencha o código e a senha.';
         return;
       }
+      
+      // Verifica se o arquivo alunos.js foi carregado corretamente
+      if (typeof window.ALUNOS_AUTORIZADOS === 'undefined' || typeof window.ADMIN_LOGIN === 'undefined') {
+          erroEl.textContent = '❌ Erro no carregamento da lista de alunos. Recarregue a página.';
+          return;
+      }
 
-      // Login de Administrador (opcional)
-      if (codigo === 'admin' && senha === 'admin123') {
+      // Login de Administrador usando as constantes do alunos.js
+      if (codigo === window.ADMIN_LOGIN && senha === window.ADMIN_SENHA) {
           sessionStorage.setItem('aluno_logado', 'admin');
           window.location.href = 'index.html';
           return;
@@ -94,11 +100,14 @@
       }
     }
 
-    // Listener para o formulário
-    document.getElementById('form-login').addEventListener('submit', function(e) {
-      e.preventDefault();
-      fazerLogin();
-    });
+    // FIX: Verifica se o elemento existe antes de anexar o listener.
+    const form = document.getElementById('form-login');
+    if (form) { 
+        form.addEventListener('submit', function(e) {
+          e.preventDefault();
+          fazerLogin();
+        });
+    }
   </script>
 </body>
 </html>
